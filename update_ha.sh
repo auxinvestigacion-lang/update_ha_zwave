@@ -8,7 +8,8 @@ echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudf
 sudo apt-get update && sudo apt-get install -y cloudflared
 
 echo "=== 1.1. Configuración e Instalación del Token de Cloudflare ==="
-read -p "Ingresa el TOKEN de Cloudflare (o presiona Enter para omitir): " CLOUDFLARE_TOKEN
+# Se agrega </dev/tty para permitir entrada de texto por SSH
+read -p "Ingresa el TOKEN de Cloudflare (o presiona Enter para omitir): " CLOUDFLARE_TOKEN </dev/tty
 
 if [ -n "$CLOUDFLARE_TOKEN" ]; then
     echo "Instalando servicio de Cloudflare con el token ingresado..."
