@@ -1,7 +1,13 @@
 #!/bin/bash
 set -e
 
-echo "=== 1. Configuración de configuration.yaml ==="
+echo "=== 1. Instalación de Cloudflare ==="
+sudo mkdir -p --mode=0755 /usr/share/keyrings
+curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
+echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main' | sudo tee /etc/apt/sources.list.d/cloudflared.list
+sudo apt-get update && sudo apt-get install -y cloudflared
+
+echo "=== 2. Configuración de configuration.yaml ==="
 cat << 'EOF' > /home/cat/config/configuration.yaml
 default_config:
 
@@ -27,17 +33,31 @@ http:
   use_x_frame_options: false
 EOF
 
-echo "=== 2. Descarga e Instalación de Custom Components ==="
+echo "=== 3. Limpieza de componentes antiguos e Instalación de Custom Components ==="
 mkdir -p /home/cat/config/custom_components
 
-# REEMPLAZA 'TuUsuario', 'TuRepositorio', 'main' y el nombre del ZIP por los tuyos:
-URL_ZIP="https://github.com/auxinvestigacion-lang/update_ha_zwave/raw/refs/heads/main/horus-integration-nexxo-1.4.3.zip"
+# Borrado de carpetas específicas en custom_components
+sudo rm -rf /home/cat/config/custom_components/hacs
+sudo rm -rf /home/cat/config/custom_components/nodered
+sudo rm -rf /home/cat/config/custom_components/webrtc
+
+# REEMPLAZA con la URL RAW exacta de tu ZIP en GitHub
+URL_ZIP="https://github.com/auxinvestigacion-lang/update_ha_zwave/raw/refs/heads/main/plugin_service_v1.4.zip"
 
 curl -sSL "$URL_ZIP" -o /tmp/componente.zip
-unzip -o /tmp/componente.zip -d /home/cat/config/custom_components/
-rm -f /tmp/componente.zip
 
-echo "=== 3. Limpieza y Liberación de Espacio ==="
+if unzip -t /tmp/componente.zip >/dev/null 2>&1; then
+    unzip -o /tmp/componente.zip -d /home/cat/config/custom_components/
+    rm -f /tmp/componente.zip
+    echo "Componente personalizado instalado exitosamente."
+else
+    echo "ERROR: No se pudo descargar un archivo ZIP válido desde GitHub."
+    echo "Revisa que la URL ($URL_ZIP) sea pública y correcta."
+    rm -f /tmp/componente.zip
+    exit 1
+fi
+
+echo "=== 4. Limpieza y Liberación de Espacio ==="
 sudo apt-get clean
 sudo npm cache clean --force
 sudo rm -rf /root/.npm/_cacache /home/cat/*.zip /home/cat/config/config
@@ -45,7 +65,7 @@ sudo journalctl --vacuum-time=1d
 docker image prune -f
 df -h /
 
-echo "=== 4. Remoción de la Versión Antigua ==="
+echo "=== 5. Remoción de la Versión Antigua ==="
 docker stop homeassistant || true
 docker rm homeassistant || true
 docker images
@@ -54,14 +74,14 @@ docker system prune -f
 docker builder prune -af
 df -h /
 
-echo "=== 5. Despliegue de la Versión Nueva ==="
+echo "=== 6. Despliegue de la Versión Nueva ==="
 cd /home/cat
 docker compose up -d --pull always
 docker ps
 docker exec homeassistant hass --version
 cd ~
 
-echo "=== 6. Actualización de Z-Wave UI ==="
+echo "=== 7. Actualización de Z-Wave UI ==="
 sudo systemctl stop zwave-ui.service
 sudo npm install -g zwave-js-ui@latest --unsafe-perm
 sudo npm cache clean --force
@@ -69,14 +89,18 @@ sudo rm -rf /root/.npm/_cacache
 sudo systemctl restart zwave-ui.service
 sudo systemctl status zwave-ui.service
 
-echo "=== 7. Verificación Final y Reinicio de Home Assistant ==="
+echo "=== 8. Verificación Final y Reinicio de Home Assistant ==="
 docker restart homeassistant || true
 df -h /
 docker ps
 sudo systemctl is-active zwave-ui.service
 du -m /home/cat/config/home-assistant_v2.db || true
 
-echo "--- Versiones Instaladas ---"
+echo "--- Versiones e Instalación Finalizadas ---"
+cloudflared --version
 docker exec homeassistant hass --version
 npm list -g zwave-js-ui
 cd ~
+
+echo "=== 9. Instalación de Nexxo LED Manager ==="
+wget -qO- https://raw.githubusercontent.com/jse-che/nexxo-led-manager/main/install.sh | sh
