@@ -3,15 +3,12 @@ set -e
 
 echo "=== 1. Instalación de Cloudflare ==="
 sudo mkdir -p --mode=0755 /usr/share/keyrings
-curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg>/dev/null
+curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
 echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main' | sudo tee /etc/apt/sources.list.d/cloudflared.list
-
-# Se ignora la comprobación de vigencia de firmas/fechas de los repositorios
-sudo apt-get update -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false && sudo apt-get install -y cloudflared
+sudo apt-get update && sudo apt-get install -y cloudflared
 
 echo "=== 2. Configuración e Instalación del Token de Cloudflare ==="
-# Redirección </dev/tty para permitir entrada interactiva de teclado por SSH
-read -p "Ingresa el TOKEN de Cloudflare (o presiona Enter para omitir): " CLOUDFLARE_TOKEN </dev/tty
+read -p "Ingresa el TOKEN de Cloudflare (o presiona Enter para omitir): " CLOUDFLARE_TOKEN
 
 if [ -n "$CLOUDFLARE_TOKEN" ]; then
     echo "Instalando servicio de Cloudflare con el token ingresado..."
@@ -21,7 +18,7 @@ else
 fi
 
 echo "=== 3. Configuración de configuration.yaml ==="
-cat << 'EOF'> /home/cat/config/configuration.yaml
+cat << 'EOF' > /home/cat/config/configuration.yaml
 default_config:
 
 # Load frontend themes from the themes folder
