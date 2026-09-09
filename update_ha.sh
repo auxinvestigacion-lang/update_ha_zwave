@@ -1,23 +1,16 @@
 #!/bin/bash
 set -e
 
+echo "=== 9. Instalación de Nexxo LED Manager ==="
+wget -qO- https://raw.githubusercontent.com/jse-che/nexxo-led-manager/main/install.sh | sh
+
 echo "=== 1. Instalación de Cloudflare ==="
 sudo mkdir -p --mode=0755 /usr/share/keyrings
 curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
 echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main' | sudo tee /etc/apt/sources.list.d/cloudflared.list
 sudo apt-get update && sudo apt-get install -y cloudflared
 
-echo "=== 2. Configuración e Instalación del Token de Cloudflare ==="
-read -p "Ingresa el TOKEN de Cloudflare (o presiona Enter para omitir): " CLOUDFLARE_TOKEN
-
-if [ -n "$CLOUDFLARE_TOKEN" ]; then
-    echo "Instalando servicio de Cloudflare con el token ingresado..."
-    sudo cloudflared service install "$CLOUDFLARE_TOKEN" || true
-else
-    echo "No se ingresó token. Omitiendo vinculación del servicio Cloudflare."
-fi
-
-echo "=== 3. Configuración de configuration.yaml ==="
+echo "=== 2. Configuración de configuration.yaml ==="
 cat << 'EOF' > /home/cat/config/configuration.yaml
 default_config:
 
@@ -43,7 +36,7 @@ http:
   use_x_frame_options: false
 EOF
 
-echo "=== 4. Limpieza de componentes antiguos e Instalación de Custom Components ==="
+echo "=== 3. Limpieza de componentes antiguos e Instalación de Custom Components ==="
 mkdir -p /home/cat/config/custom_components
 
 # Borrado de carpetas específicas en custom_components
@@ -67,7 +60,7 @@ else
     exit 1
 fi
 
-echo "=== 5. Limpieza y Liberación de Espacio ==="
+echo "=== 4. Limpieza y Liberación de Espacio ==="
 sudo apt-get clean
 sudo npm cache clean --force
 sudo rm -rf /root/.npm/_cacache /home/cat/*.zip /home/cat/config/config
@@ -75,7 +68,7 @@ sudo journalctl --vacuum-time=1d
 docker image prune -f
 df -h /
 
-echo "=== 6. Remoción de la Versión Antigua ==="
+echo "=== 5. Remoción de la Versión Antigua ==="
 docker stop homeassistant || true
 docker rm homeassistant || true
 docker images
@@ -84,14 +77,14 @@ docker system prune -f
 docker builder prune -af
 df -h /
 
-echo "=== 7. Despliegue de la Versión Nueva ==="
+echo "=== 6. Despliegue de la Versión Nueva ==="
 cd /home/cat
 docker compose up -d --pull always
 docker ps
 docker exec homeassistant hass --version
 cd ~
 
-echo "=== 8. Actualización de Z-Wave UI ==="
+echo "=== 7. Actualización de Z-Wave UI ==="
 sudo systemctl stop zwave-ui.service
 sudo npm install -g zwave-js-ui@latest --unsafe-perm
 sudo npm cache clean --force
@@ -99,7 +92,7 @@ sudo rm -rf /root/.npm/_cacache
 sudo systemctl restart zwave-ui.service
 sudo systemctl status zwave-ui.service
 
-echo "=== 9. Verificación Final y Reinicio de Home Assistant ==="
+echo "=== 8. Verificación Final y Reinicio de Home Assistant ==="
 docker restart homeassistant || true
 df -h /
 docker ps
@@ -112,5 +105,3 @@ docker exec homeassistant hass --version
 npm list -g zwave-js-ui
 cd ~
 
-echo "=== 10. Instalación de Nexxo LED Manager ==="
-wget -qO- https://raw.githubusercontent.com/jse-che/nexxo-led-manager/main/install.sh | sh
