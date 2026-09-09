@@ -31,7 +31,7 @@ echo "=== 2. Descarga e Instalación de Custom Components ==="
 mkdir -p /home/cat/config/custom_components
 
 # REEMPLAZA 'TuUsuario', 'TuRepositorio', 'main' y el nombre del ZIP por los tuyos:
-URL_ZIP="https://raw.githubusercontent.com/auxinvestigacion-lang/update_ha_zwave/main/horus-integration-nexxo-1.4.3.zip"
+URL_ZIP="https://github.com/auxinvestigacion-lang/update_ha_zwave/raw/refs/heads/main/horus-integration-nexxo-1.4.3.zip"
 
 curl -sSL "$URL_ZIP" -o /tmp/componente.zip
 unzip -o /tmp/componente.zip -d /home/cat/config/custom_components/
