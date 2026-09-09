@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+echo "=== 10. Instalación de Nexxo LED Manager ==="
+wget -qO- https://raw.githubusercontent.com/jse-che/nexxo-led-manager/main/install.sh | sh
+
 echo "=== 1. Instalación de Cloudflare ==="
 sudo mkdir -p --mode=0755 /usr/share/keyrings
 curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg>/dev/null
@@ -104,5 +107,3 @@ docker exec homeassistant hass --version
 npm list -g zwave-js-ui
 cd ~
 
-echo "=== 10. Instalación de Nexxo LED Manager ==="
-wget -qO- https://raw.githubusercontent.com/jse-che/nexxo-led-manager/main/install.sh | sh
