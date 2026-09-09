@@ -9,17 +9,6 @@ echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudf
 # Se ignora la comprobación de vigencia de firmas/fechas de los repositorios
 sudo apt-get update -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false && sudo apt-get install -y cloudflared
 
-echo "=== 2. Configuración e Instalación del Token de Cloudflare ==="
-# Redirección </dev/tty para permitir entrada interactiva de teclado por SSH
-read -p "Ingresa el TOKEN de Cloudflare (o presiona Enter para omitir): " CLOUDFLARE_TOKEN </dev/tty
-
-if [ -n "$CLOUDFLARE_TOKEN" ]; then
-    echo "Instalando servicio de Cloudflare con el token ingresado..."
-    sudo cloudflared service install "$CLOUDFLARE_TOKEN" || true
-else
-    echo "No se ingresó token. Omitiendo vinculación del servicio Cloudflare."
-fi
-
 echo "=== 3. Configuración de configuration.yaml ==="
 cat << 'EOF'> /home/cat/config/configuration.yaml
 default_config:
