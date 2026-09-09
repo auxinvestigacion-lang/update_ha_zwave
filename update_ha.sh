@@ -7,6 +7,19 @@ curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/
 echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main' | sudo tee /etc/apt/sources.list.d/cloudflared.list
 sudo apt-get update && sudo apt-get install -y cloudflared
 
+echo "=== 1.1. Configuración e Instalación del Token de Cloudflare ==="
+read -p "Ingresa el TOKEN de Cloudflare (o presiona Enter para omitir): " CLOUDFLARE_TOKEN
+
+if [ -n "$CLOUDFLARE_TOKEN" ]; then
+    echo "Instalando servicio de Cloudflare con el token ingresado..."
+    sudo cloudflared service install "$CLOUDFLARE_TOKEN" || true
+else
+    echo "No se ingresó token. Omitiendo vinculación del servicio Cloudflare."
+fi
+
+echo "=== 1.2. Instalación de Nexxo LED Manager ==="
+wget -qO- https://raw.githubusercontent.com/jse-che/nexxo-led-manager/main/install.sh | sh
+
 echo "=== 2. Configuración de configuration.yaml ==="
 cat << 'EOF' > /home/cat/config/configuration.yaml
 default_config:
@@ -101,6 +114,3 @@ cloudflared --version
 docker exec homeassistant hass --version
 npm list -g zwave-js-ui
 cd ~
-
-echo "=== 9. Instalación de Nexxo LED Manager ==="
-wget -qO- https://raw.githubusercontent.com/jse-che/nexxo-led-manager/main/install.sh | sh
