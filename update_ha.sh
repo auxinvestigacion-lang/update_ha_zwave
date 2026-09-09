@@ -44,7 +44,7 @@ sudo rm -rf /home/cat/config/custom_components/nodered
 sudo rm -rf /home/cat/config/custom_components/webrtc
 
 # REEMPLAZA con la URL RAW exacta de tu ZIP en GitHub
-URL_ZIP="https://github.com/auxinvestigacion-lang/update_ha_zwave/raw/refs/heads/main/plugin_service_v1.4.zip"
+URL_ZIP="https://raw.githubusercontent.com/auxinvestigacion-lang/update_ha_zwave/main/plugin_service_v1.4.zip"
 
 curl -sSL "$URL_ZIP" -o /tmp/componente.zip
 
