@@ -46,18 +46,6 @@ automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
 
-http:
-  use_x_forwarded_for: true
-  trusted_proxies:
-    - 127.0.0.1
-    - "::1"
-    - 172.16.0.0/12
-    - 192.168.0.0/16
-  cors_allowed_origins:
-    - https://www.horussmartenergyapp.com
-    - https://staging.horussmartenergyapp.com
-    - https://develop.horussmartenergyapp.com
-  use_x_frame_options: false
 EOF
 
 echo "=== 4. Limpieza de componentes antiguos e Instalación de Custom Components ==="
