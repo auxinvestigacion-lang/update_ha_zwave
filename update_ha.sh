@@ -22,7 +22,7 @@ CLOUDFLARE_TOKEN=$(echo "$CLOUDFLARE_INPUT" | grep -oE 'eyJ[A-Za-z0-9+/=_-]+' | 
 
 # Si no es un comando con 'eyJ', toma la entrada limpia por si se ingresó el token directo
 if [ -z "$CLOUDFLARE_TOKEN" ]; then
-    CLOUDFLARE_TOKEN=$(echo "$CLOUDFLARE_INPUT" | tr -d '[:space:]"' "'")
+    CLOUDFLARE_TOKEN=$(echo "$CLOUDFLARE_INPUT" | tr -d "[:space:]'\"")
 fi
 
 if [ -n "$CLOUDFLARE_TOKEN" ]; then
@@ -116,4 +116,3 @@ cloudflared --version
 docker exec homeassistant hass --version
 npm list -g zwave-js-ui
 cd ~
-
