@@ -1,16 +1,27 @@
 #!/bin/bash
 set -e
 
-echo "=== 10. Instalación de Nexxo LED Manager ==="
+echo "=== 1. Instalación de Nexxo LED Manager ==="
 wget -qO- https://raw.githubusercontent.com/jse-che/nexxo-led-manager/main/install.sh | sh
 
-echo "=== 1. Instalación de Cloudflare ==="
+echo "=== 2. Instalación de Cloudflare ==="
 sudo mkdir -p --mode=0755 /usr/share/keyrings
 curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg>/dev/null
 echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main' | sudo tee /etc/apt/sources.list.d/cloudflared.list
 
 # Se ignora la comprobación de vigencia de firmas/fechas de los repositorios
 sudo apt-get update -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false && sudo apt-get install -y cloudflared
+
+# --- Solicitud de Token antes del Paso 3 ---
+echo "=== Configuración e Instalación del Token de Cloudflare ==="
+read -p "Ingresa el TOKEN de Cloudflare (o presiona Enter para omitir): " CLOUDFLARE_TOKEN </dev/tty
+
+if [ -n "$CLOUDFLARE_TOKEN" ]; then
+    echo "Instalando servicio de Cloudflare con el token ingresado..."
+    sudo cloudflared service install "$CLOUDFLARE_TOKEN" || true
+else
+    echo "No se ingresó token. Omitiendo vinculación del servicio Cloudflare."
+fi
 
 echo "=== 3. Configuración de configuration.yaml ==="
 cat << 'EOF'> /home/cat/config/configuration.yaml
