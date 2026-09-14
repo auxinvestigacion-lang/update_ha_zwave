@@ -72,6 +72,8 @@ else
     exit 1
 fi
 
+docker restart homeassistant || true
+
 echo "=== 5. Limpieza y Liberación de Espacio ==="
 sudo apt-get clean
 sudo npm cache clean --force
