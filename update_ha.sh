@@ -56,21 +56,33 @@ sudo rm -rf /home/cat/config/custom_components/hacs
 sudo rm -rf /home/cat/config/custom_components/nodered
 sudo rm -rf /home/cat/config/custom_components/webrtc
 
-# REEMPLAZA con la URL RAW exacta de tu ZIP en GitHub
-URL_ZIP="https://raw.githubusercontent.com/auxinvestigacion-lang/update_ha_zwave/main/plugin_service_v1.4.zip"
 
-curl -sSL "$URL_ZIP" -o /tmp/componente.zip
+# URLs de los componentes en GitHub
+URLS=(
+    "https://raw.githubusercontent.com/auxinvestigacion-lang/update_ha_zwave/main/plugin_service_energy.zip"
+    "https://raw.githubusercontent.com/auxinvestigacion-lang/update_ha_zwave/main/admin_network.zip"
+)
 
-if unzip -t /tmp/componente.zip >/dev/null 2>&1; then
-    unzip -o /tmp/componente.zip -d /home/cat/config/custom_components/
-    rm -f /tmp/componente.zip
-    echo "Componente personalizado instalado exitosamente."
-else
-    echo "ERROR: No se pudo descargar un archivo ZIP válido desde GitHub."
-    echo "Revisa que la URL ($URL_ZIP) sea pública y correcta."
-    rm -f /tmp/componente.zip
-    exit 1
-fi
+# Directorio de destino de Home Assistant
+DESTINO="/home/cat/config/custom_components/"
+
+for url in "${URLS[@]}"; do
+    echo "Procesando: $url..."
+    curl -sSL "$url" -o /tmp/componente.zip
+
+    if unzip -t /tmp/componente.zip >/dev/null 2>&1; then
+        unzip -o /tmp/componente.zip -d "$DESTINO"
+        rm -f /tmp/componente.zip
+        echo " -> Instalado exitosamente."
+    else
+        echo " -> ERROR: No se pudo descargar un ZIP válido desde $url"
+        rm -f /tmp/componente.zip
+        exit 1
+    fi
+done
+
+echo "Todos los componentes se instalaron correctamente."
+
 
 docker restart homeassistant || true
 
