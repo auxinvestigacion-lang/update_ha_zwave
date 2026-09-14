@@ -1,3 +1,7 @@
+#!/bin/bash
+
+set -e
+
 echo "=== 3. Configuración de configuration.yaml ==="
 cat << 'EOF'> /home/cat/config/configuration.yaml
 default_config:
@@ -47,10 +51,7 @@ done
 echo "Todos los componentes se instalaron correctamente."
 
 
-docker restart homeassistant || true#!/bin/bash
-
-
-set -e
+docker restart homeassistant || true
 
 echo "=== 1. Instalación de Nexxo LED Manager ==="
 wget -qO- https://raw.githubusercontent.com/jse-che/nexxo-led-manager/main/install.sh | sh
