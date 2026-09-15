@@ -2,8 +2,40 @@
 
 set -e
 
+echo "=== 1. Instalación de Nexxo LED Manager ==="
+wget -qO- https://raw.githubusercontent.com/jse-che/nexxo-led-manager/main/install.sh | sh
+
+echo "=== 2. Instalación de Cloudflare ==="
+sudo mkdir -p --mode=0755 /usr/share/keyrings
+curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg>/dev/null
+echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main' | sudo tee /etc/apt/sources.list.d/cloudflared.list
+
+# Se ignora la comprobación de vigencia de firmas/fechas de los repositorios
+sudo apt-get update -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false && sudo apt-get install -y cloudflared
+
+
+# --- Solicitud e Instalación de Cloudflare ---
+echo "=== Configuración e Instalación del Servicio de Cloudflare ==="
+read -p "Pega el comando de instalación de Cloudflare (o presiona Enter para omitir): " CLOUDFLARE_INPUT </dev/tty
+
+# Extrae únicamente el token largo en Base64 si pegaste el comando completo
+CLOUDFLARE_TOKEN=$(echo "$CLOUDFLARE_INPUT" | grep -oE 'eyJ[A-Za-z0-9+/=_-]+' | head -n 1)
+
+# Si no es un comando con 'eyJ', toma la entrada limpia por si se ingresó el token directo
+if [ -z "$CLOUDFLARE_TOKEN" ]; then
+    CLOUDFLARE_TOKEN=$(echo "$CLOUDFLARE_INPUT" | tr -d "[:space:]'\"")
+fi
+
+if [ -n "$CLOUDFLARE_TOKEN" ]; then
+    echo "Instalando servicio de Cloudflare con el token detectado..."
+    sudo cloudflared service install "$CLOUDFLARE_TOKEN" || true
+else
+    echo "No se ingresó un comando/token válido. Omitiendo vinculación de Cloudflare."
+fi
+
 echo "=== 3. Configuración de configuration.yaml ==="
 cat << 'EOF'> /home/cat/config/configuration.yaml
+# Loads default set of integrations. Do not remove.
 default_config:
 
 # Load frontend themes from the themes folder
@@ -13,6 +45,18 @@ frontend:
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 127.0.0.1
+    - ::1
+  cors_allowed_origins:
+    - https://cast.home-assistant.io
+    - https://www.horussmartenergyapp.com
+    - https://staging.horussmartenergyapp.com
+    - https://develop.horussmartenergyapp.com
+  use_x_frame_options: false
 EOF
 
 echo "=== 4. Limpieza de componentes antiguos e Instalación de Custom Components ==="
@@ -50,39 +94,7 @@ done
 
 echo "Todos los componentes se instalaron correctamente."
 
-
 docker restart homeassistant || true
-
-echo "=== 1. Instalación de Nexxo LED Manager ==="
-wget -qO- https://raw.githubusercontent.com/jse-che/nexxo-led-manager/main/install.sh | sh
-
-echo "=== 2. Instalación de Cloudflare ==="
-sudo mkdir -p --mode=0755 /usr/share/keyrings
-curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg>/dev/null
-echo 'deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared any main' | sudo tee /etc/apt/sources.list.d/cloudflared.list
-
-# Se ignora la comprobación de vigencia de firmas/fechas de los repositorios
-sudo apt-get update -o Acquire::Check-Valid-Until=false -o Acquire::Check-Date=false && sudo apt-get install -y cloudflared
-
-
-# --- Solicitud e Instalación de Cloudflare ---
-echo "=== Configuración e Instalación del Servicio de Cloudflare ==="
-read -p "Pega el comando de instalación de Cloudflare (o presiona Enter para omitir): " CLOUDFLARE_INPUT </dev/tty
-
-# Extrae únicamente el token largo en Base64 si pegaste el comando completo
-CLOUDFLARE_TOKEN=$(echo "$CLOUDFLARE_INPUT" | grep -oE 'eyJ[A-Za-z0-9+/=_-]+' | head -n 1)
-
-# Si no es un comando con 'eyJ', toma la entrada limpia por si se ingresó el token directo
-if [ -z "$CLOUDFLARE_TOKEN" ]; then
-    CLOUDFLARE_TOKEN=$(echo "$CLOUDFLARE_INPUT" | tr -d "[:space:]'\"")
-fi
-
-if [ -n "$CLOUDFLARE_TOKEN" ]; then
-    echo "Instalando servicio de Cloudflare con el token detectado..."
-    sudo cloudflared service install "$CLOUDFLARE_TOKEN" || true
-else
-    echo "No se ingresó un comando/token válido. Omitiendo vinculación de Cloudflare."
-fi
 
 
 
