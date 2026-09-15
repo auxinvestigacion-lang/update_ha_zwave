@@ -33,7 +33,7 @@ else
     echo "No se ingresó un comando/token válido. Omitiendo vinculación de Cloudflare."
 fi
 
-echo "=== 3. Configuración de configuration.yaml ==="
+echo "=== 3. Configuración de configuration.yaml (Limpio para HA 2026.8+) ==="
 cat << 'EOF'> /home/cat/config/configuration.yaml
 # Loads default set of integrations. Do not remove.
 default_config:
@@ -45,18 +45,6 @@ frontend:
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
-
-http:
-  use_x_forwarded_for: true
-  trusted_proxies:
-    - 127.0.0.1
-    - ::1
-  cors_allowed_origins:
-    - https://cast.home-assistant.io
-    - https://www.horussmartenergyapp.com
-    - https://staging.horussmartenergyapp.com
-    - https://develop.horussmartenergyapp.com
-  use_x_frame_options: false
 EOF
 
 echo "=== 4. Limpieza de componentes antiguos e Instalación de Custom Components ==="
@@ -96,8 +84,6 @@ echo "Todos los componentes se instalaron correctamente."
 
 docker restart homeassistant || true
 
-
-
 echo "=== 5. Limpieza y Liberación de Espacio ==="
 sudo apt-get clean
 sudo npm cache clean --force
@@ -115,14 +101,51 @@ docker system prune -f
 docker builder prune -af
 df -h /
 
-echo "=== 7. Despliegue de la Versión Nueva ==="
+echo "=== 7. Inyección de Configuración HTTP en .storage ==="
+mkdir -p /home/cat/config/.storage
+
+cat << 'EOF'> /home/cat/config/.storage/http
+{
+  "version": 2,
+  "minor_version": 2,
+  "key": "http",
+  "data": {
+    "stable": {
+      "server_port": 8123,
+      "cors_allowed_origins": [
+        "https://cast.home-assistant.io",
+        "https://www.horussmartenergyapp.com",
+        "https://staging.horussmartenergyapp.com",
+        "https://develop.horussmartenergyapp.com"
+      ],
+      "use_x_forwarded_for": true,
+      "trusted_proxies": [
+        "127.0.0.1/32",
+        "::1/128"
+      ],
+      "login_attempts_threshold": -1,
+      "ip_ban_enabled": true,
+      "ssl_profile": "modern",
+      "use_x_frame_options": false
+    },
+    "pending": null,
+    "yaml_migration_done": true
+  }
+}
+EOF
+
+# Ajustar permisos por si se ejecuta como root
+sudo chown -R cat:cat /home/cat/config/.storage/http 2>/dev/null || true
+sudo chmod 644 /home/cat/config/.storage/http
+
+echo "=== 8. Despliegue de la Versión Nueva ==="
 cd /home/cat
 docker compose up -d --pull always
 docker ps
 docker exec homeassistant hass --version
 cd ~
 
-echo "=== 8. Actualización de Z-Wave UI ==="
+echo "=== 9. Actualización de Z-Wave UI ==="
 sudo systemctl stop zwave-ui.service
 sudo npm install -g zwave-js-ui@latest --unsafe-perm
 sudo npm cache clean --force
@@ -130,7 +153,7 @@ sudo rm -rf /root/.npm/_cacache
 sudo systemctl restart zwave-ui.service
 sudo systemctl status zwave-ui.service
 
-echo "=== 9. Verificación Final y Reinicio de Home Assistant ==="
+echo "=== 10. Verificación Final y Reinicio de Home Assistant ==="
 docker restart homeassistant || true
 df -h /
 docker ps
