@@ -147,7 +147,7 @@ cd ~
 
 echo "=== 9. Actualización de Z-Wave UI ==="
 sudo systemctl stop zwave-ui.service
-sudo npm install -g zwave-js-ui@latest --unsafe-perm
+sudo npm install -g zwave-js-ui@latest
 sudo npm cache clean --force
 sudo rm -rf /root/.npm/_cacache
 sudo systemctl restart zwave-ui.service
